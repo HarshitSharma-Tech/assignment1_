@@ -1,10 +1,18 @@
 import { Platform } from 'react-native';
 import { Loan, LoanSummary, ReceiptPreviewData, UserProfile } from '../types';
 
-// Web uses localhost; physical phones on the same Wi-Fi connect via LAN IP
-export const BACKEND_URL =
-  process.env.EXPO_PUBLIC_BACKEND_URL ||
-  (Platform.OS === 'web' ? 'http://localhost:4000' : 'http://192.168.29.18:4000');
+// Web dynamically adapts to current hostname; physical phones connect via LAN IP
+const getBackendUrl = (): string => {
+  if (process.env.EXPO_PUBLIC_BACKEND_URL) {
+    return process.env.EXPO_PUBLIC_BACKEND_URL;
+  }
+  if (typeof window !== 'undefined' && window.location?.hostname) {
+    return `http://${window.location.hostname}:4000`;
+  }
+  return Platform.OS === 'web' ? 'http://localhost:4000' : 'http://192.168.29.18:4000';
+};
+
+export const BACKEND_URL = getBackendUrl();
 
 export class ApiService {
   /**

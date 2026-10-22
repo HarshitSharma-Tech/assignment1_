@@ -246,9 +246,12 @@ export class LoanController {
         Boolean(newLoan.dueDate && new Date(newLoan.dueDate) < new Date());
 
       res.status(201).json({ success: true, loan: { ...newLoan, isOverdue } });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Create Loan Error:', error);
-      res.status(500).json({ error: 'Failed to create loan' });
+      res.status(500).json({
+        error: 'Failed to create loan',
+        message: error?.message || 'Database error occurred while creating loan',
+      });
     }
   }
 
