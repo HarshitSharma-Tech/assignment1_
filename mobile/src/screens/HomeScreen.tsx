@@ -263,6 +263,40 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
     return Math.round(diffMs / (1000 * 60 * 60 * 24));
   };
 
+  const handleLogoutPress = () => {
+    const doLogout = () => {
+      try {
+        if (typeof window !== 'undefined' && window.localStorage) {
+          window.localStorage.removeItem('miniledger_auth_token');
+          window.localStorage.removeItem('miniledger_auth_user');
+        }
+      } catch (e) {
+        console.warn('Could not clear local session:', e);
+      }
+
+      if (onLogout) {
+        onLogout();
+      } else if (typeof window !== 'undefined' && window.location) {
+        window.location.reload();
+      }
+    };
+
+    if (Platform.OS === 'web') {
+      const confirmed =
+        typeof window !== 'undefined' && window.confirm
+          ? window.confirm('Are you sure you want to log out of MiniLedger?')
+          : true;
+      if (confirmed) {
+        doLogout();
+      }
+    } else {
+      Alert.alert('Sign Out', 'Are you sure you want to log out of MiniLedger?', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Sign Out', style: 'destructive', onPress: doLogout },
+      ]);
+    }
+  };
+
   if (selectedLoan) {
     return (
       <LoanDetailScreen
@@ -304,19 +338,13 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
             <Text style={styles.addLoanBtnText}>+ Lent Money</Text>
           </TouchableOpacity>
 
-          {onLogout && (
-            <TouchableOpacity
-              style={styles.logoutBtn}
-              onPress={() => {
-                Alert.alert('Sign Out', 'Are you sure you want to log out of MiniLedger?', [
-                  { text: 'Cancel', style: 'cancel' },
-                  { text: 'Sign Out', style: 'destructive', onPress: onLogout },
-                ]);
-              }}
-            >
-              <Text style={styles.logoutBtnText}>Logout</Text>
-            </TouchableOpacity>
-          )}
+          <TouchableOpacity
+            style={styles.logoutBtn}
+            onPress={handleLogoutPress}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.logoutBtnText}>Logout</Text>
+          </TouchableOpacity>
         </View>
       </View>
 

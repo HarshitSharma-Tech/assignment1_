@@ -9,6 +9,7 @@ import {
   Alert,
   Image,
   Modal,
+  Platform,
 } from 'react-native';
 import { Loan, ReceiptPreviewData } from '../types';
 import { ApiService, BACKEND_URL } from '../services/api';
@@ -43,30 +44,50 @@ export const LoanDetailScreen: React.FC<LoanDetailScreenProps> = ({
     maximumFractionDigits: 2,
   })}`;
 
+  const executeMarkRepaid = async () => {
+    try {
+      setActionLoading('repay');
+      const updated = await ApiService.markLoanRepaid(loan.id, 'UPI', authToken);
+      onLoanUpdated(updated);
+      if (Platform.OS === 'web' && typeof window !== 'undefined' && window.alert) {
+        window.alert('Success: Loan marked as repaid! You can now generate an official Repayment Receipt.');
+      } else {
+        Alert.alert('Success', 'Loan marked as repaid. You can now generate an official Repayment Receipt.');
+      }
+    } catch (err: any) {
+      if (Platform.OS === 'web' && typeof window !== 'undefined' && window.alert) {
+        window.alert(err.message || 'Failed to update loan status.');
+      } else {
+        Alert.alert('Error', err.message || 'Failed to update loan status.');
+      }
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   const handleMarkAsRepaid = async () => {
-    Alert.alert(
-      'Confirm Repayment',
-      `Mark loan of ${amountFormatted} to ${loan.friendName} as fully repaid?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Confirm Repaid',
-          style: 'default',
-          onPress: async () => {
-            try {
-              setActionLoading('repay');
-              const updated = await ApiService.markLoanRepaid(loan.id, 'UPI', authToken);
-              onLoanUpdated(updated);
-              Alert.alert('Success', 'Loan marked as repaid. You can now generate an official Repayment Receipt.');
-            } catch (err: any) {
-              Alert.alert('Error', err.message || 'Failed to update loan status.');
-            } finally {
-              setActionLoading(null);
-            }
+    if (Platform.OS === 'web') {
+      const confirmed =
+        typeof window !== 'undefined' && window.confirm
+          ? window.confirm(`Mark loan of ${amountFormatted} to ${loan.friendName} as fully repaid?`)
+          : true;
+      if (confirmed) {
+        await executeMarkRepaid();
+      }
+    } else {
+      Alert.alert(
+        'Confirm Repayment',
+        `Mark loan of ${amountFormatted} to ${loan.friendName} as fully repaid?`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Confirm Repaid',
+            style: 'default',
+            onPress: executeMarkRepaid,
           },
-        },
-      ]
-    );
+        ]
+      );
+    }
   };
 
   const handleOpenReceiptPreview = async (type: 'loan' | 'repayment') => {
