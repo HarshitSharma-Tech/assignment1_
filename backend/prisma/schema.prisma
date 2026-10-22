@@ -1,0 +1,86 @@
+// Prisma Schema for MiniLedger
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String    @id @default(uuid())
+  phone        String?   @unique
+  email        String?   @unique
+  passwordHash String?
+  name         String
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  loans        Loan[]
+}
+
+model OtpVerification {
+  id        String   @id @default(uuid())
+  phone     String   @unique
+  otp       String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model Loan {
+  id              String    @id @default(uuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  friendName      String
+  // Monetary amount stored in integer paise (₹1 = 100 paise) to avoid floating point bugs
+  amountPaise     Int
+  currency        String    @default("INR")
+  status          String    @default("OUTSTANDING") // OUTSTANDING | REPAID
+  loanDate        DateTime  @default(now())
+  dueDate         DateTime?
+  repaidAt        DateTime?
+  paymentMethod   String?   // UPI | BANK_TRANSFER | CASH | null
+  paymentVerified Boolean   @default(false)
+  notes           String?
+  receiptImage    String?   // Bonus: Photo of a receipt (Base64 data or static image URL)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  receipts        Receipt[]
+
+  @@index([userId])
+}
+
+model Receipt {
+  id                    String    @id @default(uuid())
+  receiptNumber         String    @unique
+  loanId                String
+  loan                  Loan      @relation(fields: [loanId], references: [id], onDelete: Cascade)
+  receiptType           String    // LOAN | REPAYMENT
+  
+  // Immutable snapshot captured at time of generation
+  snapshotLenderName    String
+  snapshotFriendName    String
+  snapshotAmountPaise   Int
+  snapshotCurrency      String    @default("INR")
+  snapshotStatus        String
+  snapshotLoanDate      DateTime
+  snapshotDueDate       DateTime?
+  snapshotRepaidAt      DateTime?
+  snapshotPaymentMethod String?
+  snapshotNotes         String?
+
+  createdAt             DateTime  @default(now())
+
+  // Ensure one canonical receipt per (loanId, receiptType) pair.
+  // This guarantees idempotency and stable receipt numbers across repeated downloads/shares.
+  @@unique([loanId, receiptType])
+  @@index([receiptNumber])
+}
+
+model SequenceTracker {
+  name        String @id
+  lastValue   Int    @default(0)
+}

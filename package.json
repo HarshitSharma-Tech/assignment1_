@@ -1,0 +1,14 @@
+{
+  "name": "miniledger-workspace",
+  "version": "1.0.0",
+  "description": "MiniLedger - Friend Loan Tracker with Full-Stack PDF Receipt Generation & Native Sharing",
+  "scripts": {
+    "backend:dev": "npm --prefix backend run dev",
+    "backend:test": "npm --prefix backend test",
+    "backend:build": "npm --prefix backend run build",
+    "backend:seed": "npm --prefix backend run prisma:seed",
+    "mobile:start": "npm --prefix mobile start",
+    "test": "npm --prefix backend test"
+  },
+  "keywords": ["miniledger", "loans", "receipts", "react-native", "expo", "express", "prisma", "pdfkit"]
+}
