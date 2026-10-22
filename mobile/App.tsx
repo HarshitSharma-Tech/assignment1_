@@ -67,7 +67,7 @@ export default function App() {
 
   return (
     <View style={styles.container}>
-      <StatusBar style="dark" />
+      <StatusBar style="light" />
       {token && user ? (
         <HomeScreen authToken={token} currentUser={user} onLogout={handleLogout} />
       ) : (
@@ -80,10 +80,11 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FAF7F2',
+    backgroundColor: '#07101E',
   },
   center: {
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#07101E',
   },
 });

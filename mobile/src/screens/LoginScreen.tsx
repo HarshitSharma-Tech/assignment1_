@@ -12,7 +12,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Alert,
 } from 'react-native';
 import { ApiService } from '../services/api';
 import { UserProfile } from '../types';
@@ -92,7 +91,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FAF7F2" />
+      <StatusBar barStyle="light-content" backgroundColor="#07101E" />
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -105,7 +104,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
             <Text style={styles.tagline}>Track money lent to friends with verified receipts</Text>
           </View>
 
-          {/* Login Card */}
+          {/* Login Card (Matches Dark Fintech Theme) */}
           <View style={styles.card}>
             {step === 'PHONE' ? (
               <>
@@ -128,7 +127,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
                   <TextInput
                     style={styles.input}
                     placeholder="e.g. Rahul Sharma"
-                    placeholderTextColor="#94A3B8"
+                    placeholderTextColor="#64748B"
                     value={name}
                     onChangeText={setName}
                   />
@@ -145,7 +144,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
                     <TextInput
                       style={[styles.input, styles.phoneInput]}
                       placeholder="98765 43210"
-                      placeholderTextColor="#94A3B8"
+                      placeholderTextColor="#64748B"
                       keyboardType="phone-pad"
                       maxLength={10}
                       value={phone}
@@ -173,7 +172,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
                   activeOpacity={0.85}
                 >
                   {loading ? (
-                    <ActivityIndicator color="#FFFFFF" />
+                    <ActivityIndicator color="#07101E" />
                   ) : (
                     <Text style={styles.primaryBtnText}>Get Verification Code →</Text>
                   )}
@@ -199,7 +198,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
                   </TouchableOpacity>
                   <Text style={styles.cardTitle}>Enter Verification Code</Text>
                   <Text style={styles.cardSubtitle}>
-                    Sent to <Text style={{ fontWeight: '700', color: '#0F172A' }}>+91 {phone}</Text>
+                    Sent to <Text style={{ fontWeight: '700', color: '#38BDF8' }}>+91 {phone}</Text>
                   </Text>
                 </View>
 
@@ -231,7 +230,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
                   <TextInput
                     style={[styles.input, styles.otpInput]}
                     placeholder="123456"
-                    placeholderTextColor="#94A3B8"
+                    placeholderTextColor="#64748B"
                     keyboardType="number-pad"
                     maxLength={6}
                     value={otp}
@@ -263,7 +262,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
                   activeOpacity={0.85}
                 >
                   {loading ? (
-                    <ActivityIndicator color="#FFFFFF" />
+                    <ActivityIndicator color="#07101E" />
                   ) : (
                     <Text style={styles.primaryBtnText}>Verify & Open Ledger →</Text>
                   )}
@@ -300,7 +299,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#FAF7F2',
+    backgroundColor: '#07101E',
   },
   scrollContainer: {
     flexGrow: 1,
@@ -324,26 +323,26 @@ const styles = StyleSheet.create({
   appName: {
     fontSize: 28,
     fontWeight: '800',
-    color: '#0F172A',
+    color: '#FFFFFF',
     letterSpacing: -0.5,
   },
   tagline: {
     fontSize: 14,
-    color: '#64748B',
+    color: '#94A3B8',
     marginTop: 4,
     textAlign: 'center',
   },
   card: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#0E1E38',
     borderRadius: 20,
     padding: 24,
-    shadowColor: '#0F172A',
+    shadowColor: '#000000',
     shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.08,
+    shadowOpacity: 0.3,
     shadowRadius: 20,
-    elevation: 4,
+    elevation: 6,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#243B61',
   },
   cardHeader: {
     marginBottom: 20,
@@ -352,18 +351,18 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   backLinkText: {
-    color: '#0D7A5F',
+    color: '#38BDF8',
     fontWeight: '600',
     fontSize: 13,
   },
   cardTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#0F172A',
+    color: '#FFFFFF',
   },
   cardSubtitle: {
     fontSize: 13,
-    color: '#64748B',
+    color: '#94A3B8',
     marginTop: 4,
   },
   inputGroup: {
@@ -372,18 +371,18 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#334155',
+    color: '#CBD5E1',
     marginBottom: 6,
   },
   input: {
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#0A1628',
     borderWidth: 1,
-    borderColor: '#CBD5E1',
+    borderColor: '#243B61',
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 12,
     fontSize: 15,
-    color: '#0F172A',
+    color: '#FFFFFF',
   },
   phoneInputRow: {
     flexDirection: 'row',
@@ -392,9 +391,9 @@ const styles = StyleSheet.create({
   countryCodeBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F1F5F9',
+    backgroundColor: '#162235',
     borderWidth: 1,
-    borderColor: '#CBD5E1',
+    borderColor: '#243B61',
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 12,
@@ -407,7 +406,7 @@ const styles = StyleSheet.create({
   countryCodeText: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#0F172A',
+    color: '#38BDF8',
   },
   phoneInput: {
     flex: 1,
@@ -419,13 +418,13 @@ const styles = StyleSheet.create({
     letterSpacing: 8,
     fontSize: 22,
     fontWeight: '700',
-    color: '#0D7A5F',
+    color: '#34D399',
   },
   infoBox: {
     flexDirection: 'row',
-    backgroundColor: '#ECFDF5',
+    backgroundColor: '#06281D',
     borderWidth: 1,
-    borderColor: '#A7F3D0',
+    borderColor: '#059669',
     borderRadius: 12,
     padding: 12,
     marginBottom: 20,
@@ -438,36 +437,36 @@ const styles = StyleSheet.create({
   infoTitle: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#065F46',
+    color: '#34D399',
   },
   infoDesc: {
     fontSize: 12,
-    color: '#047857',
+    color: '#6EE7B7',
     marginTop: 2,
   },
   errorBox: {
-    backgroundColor: '#FEF2F2',
+    backgroundColor: '#450A0A',
     borderWidth: 1,
-    borderColor: '#FECACA',
+    borderColor: '#EF4444',
     borderRadius: 10,
     padding: 10,
     marginBottom: 16,
   },
   errorText: {
-    color: '#DC2626',
+    color: '#FCA5A5',
     fontSize: 13,
-    fontWeight: '500',
+    fontWeight: '600',
   },
   primaryBtn: {
-    backgroundColor: '#0D7A5F',
+    backgroundColor: '#10B981',
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 4,
-    shadowColor: '#0D7A5F',
+    shadowColor: '#10B981',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
+    shadowOpacity: 0.35,
     shadowRadius: 8,
     elevation: 3,
   },
@@ -475,29 +474,31 @@ const styles = StyleSheet.create({
     opacity: 0.65,
   },
   primaryBtnText: {
-    color: '#FFFFFF',
+    color: '#07101E',
     fontSize: 15,
-    fontWeight: '700',
+    fontWeight: '800',
   },
   demoShortcutBtn: {
     marginTop: 14,
-    paddingVertical: 10,
+    paddingVertical: 11,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    backgroundColor: '#F8FAFC',
+    borderColor: '#243B61',
+    backgroundColor: '#162235',
     alignItems: 'center',
   },
   demoShortcutText: {
     fontSize: 12,
-    fontWeight: '600',
-    color: '#475569',
+    fontWeight: '700',
+    color: '#38BDF8',
   },
   terminalCallout: {
-    backgroundColor: '#0F172A',
+    backgroundColor: '#050B14',
     borderRadius: 12,
     padding: 14,
     marginBottom: 18,
+    borderWidth: 1,
+    borderColor: '#1E293B',
   },
   terminalDotRow: {
     flexDirection: 'row',
@@ -527,9 +528,9 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   autofillBtn: {
-    backgroundColor: '#F0FDF4',
+    backgroundColor: '#162235',
     borderWidth: 1,
-    borderColor: '#BBF7D0',
+    borderColor: '#38BDF8',
     paddingVertical: 9,
     paddingHorizontal: 12,
     borderRadius: 10,
@@ -537,9 +538,9 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   autofillBtnText: {
-    color: '#166534',
+    color: '#38BDF8',
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   resendRow: {
     alignItems: 'center',
@@ -547,12 +548,12 @@ const styles = StyleSheet.create({
   },
   resendTimerText: {
     fontSize: 13,
-    color: '#94A3B8',
+    color: '#64748B',
   },
   resendLinkText: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#0D7A5F',
+    color: '#38BDF8',
   },
   footerFeatures: {
     flexDirection: 'row',
@@ -563,8 +564,10 @@ const styles = StyleSheet.create({
   },
   featurePill: {
     fontSize: 12,
-    color: '#64748B',
-    backgroundColor: '#EDE8E1',
+    color: '#94A3B8',
+    backgroundColor: '#0E1E38',
+    borderWidth: 1,
+    borderColor: '#1E293B',
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 20,
