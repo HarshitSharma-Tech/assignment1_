@@ -74,6 +74,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   const [notes, setNotes] = useState('');
   const [dueDateString, setDueDateString] = useState<string>('');
   const [selectedPresetReceipt, setSelectedPresetReceipt] = useState<string | null>(null);
+  const [uploadedPhotoBase64, setUploadedPhotoBase64] = useState<string | null>(null);
+  const [uploadedPhotoName, setUploadedPhotoName] = useState<string | null>(null);
+  const [uploadedPhotoSize, setUploadedPhotoSize] = useState<string | null>(null);
+  const [showUrlFallback, setShowUrlFallback] = useState(false);
   const [customReceiptUrl, setCustomReceiptUrl] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('UPI');
   const [creating, setCreating] = useState(false);
@@ -137,6 +141,59 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
     setDueDateString(target.toISOString().split('T')[0]);
   };
 
+  const handlePickPhotoFromBrowser = () => {
+    if (Platform.OS === 'web' && typeof document !== 'undefined') {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.onchange = (e: any) => {
+        const file = e.target?.files?.[0];
+        if (!file) return;
+
+        if (!file.type.startsWith('image/')) {
+          if (typeof window !== 'undefined' && window.alert) {
+            window.alert('Please select an image file (PNG, JPG, JPEG, WEBP).');
+          }
+          return;
+        }
+
+        if (file.size > 8 * 1024 * 1024) {
+          if (typeof window !== 'undefined' && window.alert) {
+            window.alert('Photo is too large. Please select an image under 8MB.');
+          }
+          return;
+        }
+
+        const sizeKb = Math.round(file.size / 1024);
+        const sizeFormatted = sizeKb > 1024 ? `${(sizeKb / 1024).toFixed(1)} MB` : `${sizeKb} KB`;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const result = event.target?.result as string;
+          if (result) {
+            setUploadedPhotoBase64(result);
+            setUploadedPhotoName(file.name);
+            setUploadedPhotoSize(sizeFormatted);
+            setSelectedPresetReceipt(null);
+            setCustomReceiptUrl('');
+          }
+        };
+        reader.onerror = () => {
+          if (typeof window !== 'undefined' && window.alert) {
+            window.alert('Could not read the selected image file.');
+          }
+        };
+        reader.readAsDataURL(file);
+      };
+      input.click();
+    } else {
+      Alert.alert(
+        'Upload Photo',
+        'Direct file upload is supported on web browsers. On mobile, please select one of the sample receipts below.'
+      );
+    }
+  };
+
   const handleCreateLoan = async () => {
     setFormError(null);
 
@@ -165,9 +222,11 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       finalDueDate = parsedDate.toISOString();
     }
 
-    // Receipt image (Bonus)
+    // Receipt image (Bonus: Browser upload takes precedence, then presets, then URL)
     const finalReceiptImage =
-      selectedPresetReceipt || (customReceiptUrl && customReceiptUrl.trim() ? customReceiptUrl.trim() : null);
+      uploadedPhotoBase64 ||
+      selectedPresetReceipt ||
+      (customReceiptUrl && customReceiptUrl.trim() ? customReceiptUrl.trim() : null);
 
     try {
       setCreating(true);
@@ -215,8 +274,12 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       setAmountRupees('');
       setNotes('');
       setDueDateString('');
+      setUploadedPhotoBase64(null);
+      setUploadedPhotoName(null);
+      setUploadedPhotoSize(null);
       setSelectedPresetReceipt(null);
       setCustomReceiptUrl('');
+      setShowUrlFallback(false);
       setFormError(null);
 
       await loadAllData(activeToken);
@@ -805,7 +868,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                 </View>
               </View>
 
-              {/* ═══ Bonus Feature: Upload a Photo of a Receipt with an Entry ═══ */}
+              {/* ═══ Bonus Feature: Upload a Photo of a Receipt from Browser ═══ */}
               <View style={styles.inputField}>
                 <View style={styles.bonusBadgeRow}>
                   <Text style={styles.fieldLabel}>Bonus: Attach Receipt Photo</Text>
@@ -814,67 +877,129 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                   </View>
                 </View>
                 <Text style={styles.fieldHelpText}>
-                  Select a preset receipt sample or paste an image URL to attach proof of transaction:
+                  Choose a receipt photo directly from your computer or phone browser:
                 </Text>
 
-                <View style={styles.receiptPresetRow}>
-                  {SAMPLE_RECEIPTS.map((preset) => {
-                    const isSelected = selectedPresetReceipt === preset.url;
-                    return (
-                      <TouchableOpacity
-                        key={preset.id}
-                        style={[styles.receiptPresetChip, isSelected && styles.receiptPresetChipActive]}
-                        onPress={() => {
-                          if (isSelected) {
-                            setSelectedPresetReceipt(null);
-                          } else {
-                            setSelectedPresetReceipt(preset.url);
-                            setCustomReceiptUrl('');
-                          }
-                        }}
-                      >
-                        <Text
-                          style={[
-                            styles.receiptPresetChipText,
-                            isSelected && styles.receiptPresetChipTextActive,
-                          ]}
+                {/* Primary: Browser File Picker Upload Card */}
+                {!uploadedPhotoBase64 && !selectedPresetReceipt && !customReceiptUrl ? (
+                  <TouchableOpacity
+                    style={styles.uploadCardBtn}
+                    onPress={handlePickPhotoFromBrowser}
+                    activeOpacity={0.8}
+                  >
+                    <View style={styles.uploadIconCircle}>
+                      <Text style={styles.uploadIconText}>📷</Text>
+                    </View>
+                    <Text style={styles.uploadCardTitle}>Choose Photo from Computer / Browser</Text>
+                    <Text style={styles.uploadCardSubtitle}>
+                      Click to browse your device (PNG, JPG, WEBP, JPEG)
+                    </Text>
+                  </TouchableOpacity>
+                ) : null}
+
+                {/* Photo Loaded Preview Card */}
+                {(uploadedPhotoBase64 || selectedPresetReceipt || customReceiptUrl) && (
+                  <View style={styles.photoAttachedCard}>
+                    <Image
+                      source={{ uri: uploadedPhotoBase64 || selectedPresetReceipt || customReceiptUrl }}
+                      style={styles.attachedThumbnail}
+                      resizeMode="cover"
+                    />
+                    <View style={styles.attachedMetaWrap}>
+                      <View style={styles.attachedSuccessRow}>
+                        <Text style={styles.attachedCheckIcon}>✓</Text>
+                        <Text style={styles.attachedSuccessLabel}>Photo Attached</Text>
+                      </View>
+                      <Text style={styles.attachedFilename} numberOfLines={1}>
+                        {uploadedPhotoName || (selectedPresetReceipt ? 'Sample Receipt Preset' : 'Custom Image')}
+                      </Text>
+                      {uploadedPhotoSize && (
+                        <Text style={styles.attachedSize}>{uploadedPhotoSize}</Text>
+                      )}
+                      <View style={styles.attachedActionsRow}>
+                        <TouchableOpacity
+                          style={styles.changePhotoBtn}
+                          onPress={handlePickPhotoFromBrowser}
                         >
-                          {preset.label}
-                        </Text>
-                      </TouchableOpacity>
-                    );
-                  })}
+                          <Text style={styles.changePhotoBtnText}>🔄 Change</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={styles.removePhotoBtn}
+                          onPress={() => {
+                            setUploadedPhotoBase64(null);
+                            setUploadedPhotoName(null);
+                            setUploadedPhotoSize(null);
+                            setSelectedPresetReceipt(null);
+                            setCustomReceiptUrl('');
+                          }}
+                        >
+                          <Text style={styles.removePhotoBtnText}>✕ Remove</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  </View>
+                )}
+
+                {/* Quick Presets for Evaluation Convenience */}
+                <View style={styles.presetSection}>
+                  <Text style={styles.presetSectionLabel}>Or test with sample receipt presets:</Text>
+                  <View style={styles.receiptPresetRow}>
+                    {SAMPLE_RECEIPTS.map((preset) => {
+                      const isSelected = selectedPresetReceipt === preset.url;
+                      return (
+                        <TouchableOpacity
+                          key={preset.id}
+                          style={[styles.receiptPresetChip, isSelected && styles.receiptPresetChipActive]}
+                          onPress={() => {
+                            if (isSelected) {
+                              setSelectedPresetReceipt(null);
+                            } else {
+                              setSelectedPresetReceipt(preset.url);
+                              setUploadedPhotoBase64(null);
+                              setUploadedPhotoName(preset.label);
+                              setUploadedPhotoSize(null);
+                              setCustomReceiptUrl('');
+                            }
+                          }}
+                        >
+                          <Text
+                            style={[
+                              styles.receiptPresetChipText,
+                              isSelected && styles.receiptPresetChipTextActive,
+                            ]}
+                          >
+                            {preset.label}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
                 </View>
 
-                {/* Custom URL fallback */}
-                <TextInput
-                  style={[styles.textInput, { marginTop: 8 }]}
-                  placeholder="Or enter custom image URL"
-                  placeholderTextColor="#94A3B8"
-                  value={customReceiptUrl}
-                  onChangeText={(val) => {
-                    setCustomReceiptUrl(val);
-                    if (val) setSelectedPresetReceipt(null);
-                  }}
-                />
+                {/* Optional URL Toggle in case needed */}
+                <TouchableOpacity
+                  style={styles.toggleUrlBtn}
+                  onPress={() => setShowUrlFallback(!showUrlFallback)}
+                >
+                  <Text style={styles.toggleUrlText}>
+                    {showUrlFallback ? '▲ Hide URL Input' : '▼ Or paste image URL link instead'}
+                  </Text>
+                </TouchableOpacity>
 
-                {/* Image Preview Thumbnail */}
-                {(selectedPresetReceipt || customReceiptUrl) && (
-                  <View style={styles.formReceiptPreviewWrap}>
-                    <Image
-                      source={{ uri: selectedPresetReceipt || customReceiptUrl }}
-                      style={styles.formReceiptPreviewImg}
-                    />
-                    <TouchableOpacity
-                      style={styles.removeReceiptBtn}
-                      onPress={() => {
+                {showUrlFallback && (
+                  <TextInput
+                    style={[styles.textInput, { marginTop: 6 }]}
+                    placeholder="https://example.com/receipt.jpg"
+                    placeholderTextColor="#94A3B8"
+                    value={customReceiptUrl}
+                    onChangeText={(val) => {
+                      setCustomReceiptUrl(val);
+                      if (val) {
+                        setUploadedPhotoBase64(null);
                         setSelectedPresetReceipt(null);
-                        setCustomReceiptUrl('');
-                      }}
-                    >
-                      <Text style={styles.removeReceiptBtnText}>✕ Remove Photo</Text>
-                    </TouchableOpacity>
-                  </View>
+                      }
+                    }}
+                  />
                 )}
               </View>
 
@@ -1574,6 +1699,137 @@ const styles = StyleSheet.create({
   receiptPresetChipTextActive: {
     color: '#065F46',
     fontWeight: '700',
+  },
+  uploadCardBtn: {
+    backgroundColor: '#F8FAFC',
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    borderColor: '#0D7A5F',
+    borderRadius: 14,
+    paddingVertical: 18,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 4,
+  },
+  uploadIconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#ECFDF5',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  uploadIconText: {
+    fontSize: 22,
+  },
+  uploadCardTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#0D7A5F',
+  },
+  uploadCardSubtitle: {
+    fontSize: 11,
+    color: '#64748B',
+    marginTop: 3,
+  },
+  photoAttachedCard: {
+    flexDirection: 'row',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
+    borderColor: '#A7F3D0',
+    borderRadius: 12,
+    padding: 10,
+    alignItems: 'center',
+    marginTop: 6,
+    shadowColor: '#0D7A5F',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  attachedThumbnail: {
+    width: 64,
+    height: 64,
+    borderRadius: 8,
+    backgroundColor: '#E2E8F0',
+  },
+  attachedMetaWrap: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  attachedSuccessRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  attachedCheckIcon: {
+    color: '#0D7A5F',
+    fontWeight: '900',
+    fontSize: 12,
+    marginRight: 4,
+  },
+  attachedSuccessLabel: {
+    color: '#0D7A5F',
+    fontWeight: '800',
+    fontSize: 11,
+    letterSpacing: 0.3,
+  },
+  attachedFilename: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#0F172A',
+    marginTop: 2,
+  },
+  attachedSize: {
+    fontSize: 10,
+    color: '#64748B',
+    marginTop: 1,
+  },
+  attachedActionsRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 6,
+  },
+  changePhotoBtn: {
+    backgroundColor: '#F1F5F9',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  changePhotoBtnText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#475569',
+  },
+  removePhotoBtn: {
+    backgroundColor: '#FEE2E2',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  removePhotoBtnText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#DC2626',
+  },
+  presetSection: {
+    marginTop: 12,
+  },
+  presetSectionLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#64748B',
+    marginBottom: 6,
+  },
+  toggleUrlBtn: {
+    marginTop: 10,
+    alignSelf: 'flex-start',
+  },
+  toggleUrlText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#0D7A5F',
   },
   formReceiptPreviewWrap: {
     marginTop: 10,
